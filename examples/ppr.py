@@ -1,5 +1,5 @@
 import operator
-
+import matplotlib.pyplot as plt
 import networkx as nx
 
 G = nx.Graph()
@@ -20,6 +20,9 @@ G.add_edges_from([
     ("Todd", "Harry Potter"),
     ("Todd", "Hobbit"),
 ])
+
+nx.draw(G)
+plt.show()
 
 pr = nx.pagerank(G)
 pr = sorted(pr.items(), key=operator.itemgetter(1), reverse=True)

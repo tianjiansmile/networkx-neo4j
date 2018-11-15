@@ -1,10 +1,36 @@
 import networkx as nx
 from neo4j.v1 import GraphDatabase, basic_auth
+import matplotlib.pyplot as plt
 
 import nxneo4j
+def define_data(G):
+    G.add_nodes_from(["John", "Mary", "Jill", "Todd",
+                  "iPhone5", "Kindle Fire", "Fitbit Flex Wireless", "Harry Potter", "Hobbit"])
+    G.add_edges_from([
+        ("John", "iPhone5"),
+        ("John", "Kindle Fire"),
+        ("Mary", "iPhone5"),
+        ("Mary", "Kindle Fire"),
+        ("Mary", "Fitbit Flex Wireless"),
+        ("Jill", "iPhone5"),
+        ("Jill", "Kindle Fire"),
+        ("Jill", "Fitbit Flex Wireless"),
+        ("Todd", "Fitbit Flex Wireless"),
+        ("Todd", "Harry Potter"),
+        ("Todd", "Hobbit"),
+    ])
 
+def define_data1(G):
+    G.add_node(1)
+    G.add_nodes_from([2, 3])
+
+    G.add_edge(1, 2)
+    G.add_edge(4, 5)
+    G.add_edges_from([(1, 2), (1, 3), (2, 3), (3, 4), (4, 5)])
+
+#  对比 networkx 和neo4j 的图算法
 networkx_functions = {
-    "betweenness_centrality": nx.betweenness_centrality,
+    "betweenness_centrality": nx.betweenness_centrality,  # 单源最短路径算法 1 无权图使用广度优先遍历 2 有权图使用Dijkstra
     "closeness_centrality": nx.closeness_centrality,
     "harmonic_centrality": nx.harmonic_centrality,
     "pagerank": nx.pagerank,
@@ -32,13 +58,13 @@ neo4j_functions = {
 }
 
 
-def execute_graph(G, functions):
-    G.add_node(1)
-    G.add_nodes_from([2, 3])
-
-    G.add_edge(1, 2)
-    G.add_edge(4, 5)
-    G.add_edges_from([(1, 2), (1, 3), (2, 3), (3, 4), (4, 5)])
+def execute_graph(G, functions,type):
+    define_data1(G)
+    if type == 2:
+        # 在屏幕画出图像
+        nx.draw(G)
+        # plt.savefig("ba.png")  # 输出方式1: 将图像存为一个png格式的图片文件
+        plt.show()
 
     print("Number of nodes: {0}".format(G.number_of_nodes()))
 
@@ -49,11 +75,11 @@ def execute_graph(G, functions):
 
     print("Closeness (WF): {0}".format(closeness(G, wf_improved=True)))
     print("Closeness (no WF): {0}".format(closeness(G, wf_improved=False)))
-    print("Closeness (one node): {0}".format(closeness(G, 1, wf_improved=False)))
+    # print("Closeness (one node): {0}".format(closeness(G, 1, wf_improved=False)))
 
     harmonic = functions["harmonic_centrality"]
     print("Harmonic (default): {0}".format(harmonic(G)))
-    print("Harmonic (nbunch): {0}".format(harmonic(G, nbunch=[1, 2, 3])))
+    # print("Harmonic (nbunch): {0}".format(harmonic(G, nbunch=[1, 2, 3])))
 
     pagerank = functions["pagerank"]
     print("PageRank: {0}".format(pagerank(G)))
@@ -71,7 +97,7 @@ def execute_graph(G, functions):
     print("Label Propagation: {0}".format(list(lpa(G))))
 
     shortest_path = functions["shortest_path"]
-    print("Shortest Path: {0}".format(shortest_path(G, 1, 5, 'weight')))
+    # print("Shortest Path: {0}".format(shortest_path(G, 1, 5, 'weight')))
     print("Single Shortest Path: {0}".format(shortest_path(G, 1)))
 
     connected_components = functions["connected_components"]
@@ -84,10 +110,12 @@ def execute_graph(G, functions):
 
 if __name__ == '__main__':
     print("Neo4j")
-    execute_graph(nxneo4j.Graph(GraphDatabase.driver("bolt://localhost", auth=basic_auth("neo4j", "neo"))),
-                  neo4j_functions)
+    # 利用neo4j数据库 来创建图，并且做各种图计算
+    execute_graph(nxneo4j.Graph(GraphDatabase.driver("bolt://localhost", auth=basic_auth("neo4j", "123456"))),
+                  neo4j_functions,1)
 
     print()
 
     print("networkx")
-    execute_graph(nx.Graph(), networkx_functions)
+    # 利用networkx 来创建图，并且做各种图计算
+    execute_graph(nx.Graph(), networkx_functions,2)
